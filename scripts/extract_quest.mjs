@@ -20,7 +20,7 @@ const extractQuest = (document, name) => {
     [...document.querySelectorAll('.main-contents .text h3')].find(
       n => n.textContent === 'Description'
     )?.nextSibling.textContent
-  );
+  ).replaceAll(/\<([nNrRcC])(ame|AME|lass|LASS|ace|ACE)\>/g, '$$$1');
 
   // Start
   const start = groupByKey(infobox['Start'].map(matchEntityLink));
