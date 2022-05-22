@@ -1,0 +1,27 @@
+{
+  "name": "pfquest-turtle",
+  "version": "1.0.0",
+  "description": "This AddOn is a [pfQuest](https://github.com/shagu/pfQuest) extension, which adds support for the [TurtleWoW](https://turtle-wow.org/) Private Server. In order to run this extension, the latest version of [pfQuest](https://github.com/shagu/pfQuest) is always required and only enUS-Gameclients are supported.",
+  "main": "index.js",
+  "type": "module",
+  "scripts": {
+    "add:item": "node ./scripts/index.js item",
+    "add:npc": "node ./scripts/index.js npc",
+    "add:object": "node ./scripts/index.js object",
+    "add:quest": "node ./scripts/index.js quest"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/Haaxor1689/pfQuest-turtle.git"
+  },
+  "author": "",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/Haaxor1689/pfQuest-turtle/issues"
+  },
+  "homepage": "https://github.com/Haaxor1689/pfQuest-turtle#readme",
+  "dependencies": {
+    "jsdom": "^19.0.0",
+    "node-fetch": "^3.2.3"
+  }
+}
