@@ -26,7 +26,7 @@ There are 4 `add:*` scripts you can use and they all accept an array of IDs of e
 ```
 yarn add:quest 111 222
 \\ or
-npm start add:quest 111 222
+npm run add:quest 111 222
 ```
 
 So let's say we want to add the [The Unsent Letter](https://database.turtle-wow.org/?quest=373) quest chain, we need to run this command:
@@ -36,6 +36,16 @@ yarn add:quest 373
 ```
 
 This will scrape info about this quest, all related items and npcs, and also all other quests in this chain.
+
+## Sorting
+
+You can use sort script to automatically sort all entries in all files by their id.
+
+```
+yarn sort
+\\ or
+npm run sort
+```
 
 ## Limitations
 

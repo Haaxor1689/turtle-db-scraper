@@ -8,7 +8,8 @@
     "add:item": "node ./scripts/index.js item",
     "add:npc": "node ./scripts/index.js npc",
     "add:object": "node ./scripts/index.js object",
-    "add:quest": "node ./scripts/index.js quest"
+    "add:quest": "node ./scripts/index.js quest",
+    "sort": "node ./scripts/sort.js"
   },
   "repository": {
     "type": "git",
