@@ -42,9 +42,9 @@ This will scrape info about this quest, all related items and npcs, and also all
 You can use sort script to automatically sort all entries in all files by their id.
 
 ```
-yarn sort
+yarn sort:all
 \\ or
-npm run sort
+npm run sort:all
 ```
 
 ## Limitations

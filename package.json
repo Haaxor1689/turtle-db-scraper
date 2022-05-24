@@ -9,7 +9,7 @@
     "add:npc": "node ./scripts/index.js npc",
     "add:object": "node ./scripts/index.js object",
     "add:quest": "node ./scripts/index.js quest",
-    "sort": "node ./scripts/sort.js"
+    "sort:all": "node ./scripts/sort_all.js"
   },
   "repository": {
     "type": "git",
@@ -23,6 +23,7 @@
   "homepage": "https://github.com/Haaxor1689/pfQuest-turtle#readme",
   "dependencies": {
     "jsdom": "^19.0.0",
-    "node-fetch": "^3.2.3"
+    "node-fetch": "^3.2.3",
+    "prompts": "^2.4.2"
   }
 }

@@ -1,19 +1,35 @@
 import { readFileSync, writeFileSync } from 'fs';
 import { JSDOM } from 'jsdom';
+import prompts from 'prompts';
 import fetch from 'node-fetch';
 import extractItem from './extract_item.mjs';
 import extractNpc from './extract_npc.mjs';
 import extractObject from './extract_object.mjs';
 import extractQuest from './extract_quest.mjs';
+import sort from './sort.mjs';
 
 const DatabaseCache = {};
+const SeenCache = {};
 
 export const Color = {
   Reset: '\x1b[0m',
   Bright: '\x1b[1m',
+  Underscore: '\x1b[4m',
+  Blue: '\x1b[34m',
   Red: '\x1b[31m',
   Green: '\x1b[32m',
   Yellow: '\x1b[33m'
+};
+
+const C = (...colors) => Color.Reset + colors.map(c => Color[c]).join('');
+
+const prompt = async (message = 'Overwrite?') => {
+  const { v } = await prompts({
+    type: 'confirm',
+    name: 'v',
+    message
+  });
+  return v;
 };
 
 const Callbacks = {
@@ -22,6 +38,11 @@ const Callbacks = {
   object: extractObject,
   quest: extractQuest
 };
+
+const entityLink = (type, id) =>
+  C('Blue', 'Underscore') +
+  `https://database.turtle-wow.org/?${type}=${id}` +
+  C();
 
 const loadShaguDatabase = async file => {
   if (DatabaseCache[file]) return DatabaseCache[file];
@@ -35,7 +56,10 @@ const loadShaguDatabase = async file => {
 
 const loadDocument = async (table, id) => {
   console.log(
-    `>>> Loading entry ${Color.Bright}[${id}]${Color.Reset} from https://database.turtle-wow.org/?${table}=${id}`
+    `>>> Loading entry ${C('Bright')}[${id}]${C()} from`,
+    C('Blue', 'Underscore') +
+      `https://database.turtle-wow.org/?${table}=${id}` +
+      C()
   );
 
   const page = await fetch(`https://database.turtle-wow.org/?${table}=${id}`);
@@ -48,15 +72,17 @@ const typeToFile = type => (type === 'npc' ? 'unit' : type);
 
 const checkContainsId = (file, id) => file.match(`\\n  \\[${id}\\] = `);
 
+const locFile = file => `./db/enUS/${file}s-turtle.lua`;
+const dbFile = file => `./db/${file}s-turtle.lua`;
+
 const checkLuaTable = (path, id) => {
   const file = readFileSync(path).toString();
   return checkContainsId(file, id);
 };
 
-const appendToLuaTable = (path, id, entry, comment) => {
-  console.log(
-    `\n>>> Adding entry ${Color.Bright}[${id}]${Color.Reset} to file ${path}`
-  );
+const appendToLuaTable = async (type, name, id, entry, comment) => {
+  const path = type === 'loc' ? locFile(name) : dbFile(name);
+  console.log(`\n>>> Adding entry ${C('Bright')}[${id}]${C()} to file ${path}`);
   const file = readFileSync(path).toString();
 
   const toAppend = `${
@@ -64,30 +90,28 @@ const appendToLuaTable = (path, id, entry, comment) => {
   }  [${id}] = ${entry},\n`;
   console.log(toAppend.slice(0, -1));
 
-  if (checkLuaTable(path, id)) {
-    console.log(`${Color.Red}>>> Entry [${id}] already present.${Color.Reset}`);
-    return;
-  }
-
-  writeFileSync(path, `${file.slice(0, -2)}${toAppend}}\n`);
-
-  console.log(
-    `${Color.Green}>>> Above data was appended to ${path}${Color.Reset}`
+  const content = sort(
+    `${file.slice(0, -2)}${toAppend}}\n`,
+    type === 'loc' ? `enUS/${name}s` : `${name}s`
   );
+
+  writeFileSync(path, content);
+
+  console.log(C('Green') + `>>> Above entry was added to ${path}` + C());
 };
 
 export const extract = async (type, ids) => {
   const callback = Callbacks[type];
   if (!callback) {
     console.log(
-      `${Color.Yellow}>>> Unknown entity type "${type}" to extract.${Color.Reset}`
+      C('Yellow') + `>>> Unknown entity type "${type}" to extract.` + C()
     );
     return Promise.resolve();
   }
 
   if (!ids.length) {
     console.log(
-      `${Color.Yellow}>>> Please provide at least one id as an argument.${Color.Reset}`
+      C('Yellow') + `>>> Please provide at least one id as an argument.` + C()
     );
     return Promise.resolve();
   }
@@ -95,21 +119,27 @@ export const extract = async (type, ids) => {
   return ids.reduce(
     (prev, id) =>
       prev.then(async () => {
+        if (SeenCache[type]?.find(v => v === id)) return;
+
         const file = typeToFile(type);
-        const locFile = `./db/enUS/${file}s-turtle.lua`;
-        const dbFile = `./db/${file}s-turtle.lua`;
+        if (
+          checkLuaTable(locFile(file), id) &&
+          checkLuaTable(dbFile(file), id)
+        ) {
+          console.log(
+            C('Yellow') + `>>> ${type} [${id}], already present.` + C(),
+            entityLink(type, id)
+          );
+          if (!(await prompt())) return Promise.resolve();
+        }
 
         const shaguDb = await loadShaguDatabase(file);
         if (checkContainsId(shaguDb, id)) {
           console.log(
-            `${Color.Yellow}>>> Skipping [${id}], present in vanilla database.${Color.Reset}`
-          );
-          return Promise.resolve();
-        }
-
-        if (checkLuaTable(locFile, id) && checkLuaTable(dbFile, id)) {
-          console.log(
-            `${Color.Yellow}>>> Skipping [${id}], already present.${Color.Reset}`
+            C('Yellow') +
+              `>>> ${type} [${id}], present in vanilla database.` +
+              C(),
+            entityLink(type, id)
           );
           return Promise.resolve();
         }
@@ -122,23 +152,32 @@ export const extract = async (type, ids) => {
           .join(' - ');
         if (!name) {
           console.log(
-            `${Color.Red}>>> Entry with id [${id}] and type [${type}] not found.${Color.Reset}`
+            C('Red') + `>>> Failed to parse ${type} [${id}].` + C(),
+            entityLink(type, id)
           );
           return Promise.resolve();
         }
 
         const { loc = `"${name}"`, db, rec } = callback(document, name);
 
-        appendToLuaTable(locFile, id, loc);
-        appendToLuaTable(dbFile, id, db, name);
+        await appendToLuaTable('loc', file, id, loc);
+        await appendToLuaTable('db', file, id, db, name);
 
-        return Object.entries(rec ?? {}).reduce(
-          (prev, [type, ids]) =>
-            prev.then(() =>
-              ids.length ? extract(type, ids) : Promise.resolve()
-            ),
-          Promise.resolve()
-        );
+        // Update seen cache so the same entry won't appear multiple times if overwriting
+        SeenCache[type] = [...(SeenCache[type] ?? []), id];
+
+        if (rec) {
+          console.log(`>>> Related entities:`);
+          console.table(rec);
+          return Object.entries(rec).reduce(
+            (prev, [type, ids]) =>
+              prev.then(() =>
+                ids.length ? extract(type, ids) : Promise.resolve()
+              ),
+            Promise.resolve()
+          );
+        }
+        return Promise.resolve();
       }),
     Promise.resolve()
   );
