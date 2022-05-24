@@ -11,6 +11,10 @@ import sort from './sort.mjs';
 const DatabaseCache = {};
 const SeenCache = {};
 
+const FlagForce = process.argv.indexOf('--force') > 0;
+const FlagSafe = process.argv.indexOf('--safe') > 0;
+const FlagShallow = process.argv.indexOf('--shallow') > 0;
+
 export const Color = {
   Reset: '\x1b[0m',
   Bright: '\x1b[1m',
@@ -130,7 +134,8 @@ export const extract = async (type, ids) => {
             C('Yellow') + `>>> ${type} [${id}], already present.` + C(),
             entityLink(type, id)
           );
-          if (!(await prompt())) return Promise.resolve();
+          if (!FlagForce && (FlagSafe || !(await prompt())))
+            return Promise.resolve();
         }
 
         const shaguDb = await loadShaguDatabase(file);
@@ -166,7 +171,7 @@ export const extract = async (type, ids) => {
         // Update seen cache so the same entry won't appear multiple times if overwriting
         SeenCache[type] = [...(SeenCache[type] ?? []), id];
 
-        if (rec) {
+        if (!FlagShallow && rec) {
           console.log(`>>> Related entities:`);
           console.table(rec);
           return Object.entries(rec).reduce(

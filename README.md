@@ -37,6 +37,14 @@ yarn add:quest 373
 
 This will scrape info about this quest, all related items and npcs, and also all other quests in this chain.
 
+### Flags
+
+There are few flags that change the behavior of this tool:
+
+- `--force`: Replaces existing entries without asking
+- `--safe`: Skips existing entries without asking
+- `--shallow`: Scrapes only given entity ids without related ones
+
 ## Sorting
 
 You can use sort script to automatically sort all entries in all files by their id.
