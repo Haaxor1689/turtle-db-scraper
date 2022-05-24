@@ -188,7 +188,10 @@ export const buildLuaTable = (indent, ...pairs) =>
     (str, val) =>
       !val || val[1] === undefined
         ? str
-        : `${str}${indent}  [${JSON.stringify(val[0])}] = ${val[1]},\n`,
+        : `${str}${indent}  [${JSON.stringify(val[0])}] = ${val[1].replaceAll(
+            /(.)"(.)/g,
+            '$1\\"$2'
+          )},\n`,
     ''
   )}${indent}}`;
 
@@ -253,5 +256,8 @@ export const matchEntityLink = str => {
 
 export const groupByKey = value =>
   Object.entries(
-    value.reduce((obj, [k, v]) => ({ ...obj, [k]: [...(obj[k] ?? []), v] }), {})
+    (value ?? []).reduce(
+      (obj, [k, v]) => ({ ...obj, [k]: [...(obj[k] ?? []), v] }),
+      {}
+    )
   ).reduce((obj, [k, v]) => [...obj, [k, `{ ${v.join(', ')} }`]], []);

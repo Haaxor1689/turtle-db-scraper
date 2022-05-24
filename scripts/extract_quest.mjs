@@ -20,13 +20,13 @@ const extractQuest = (document, name) => {
     [...document.querySelectorAll('.main-contents .text h3')].find(
       n => n.textContent === 'Description'
     )?.nextSibling.textContent
-  ).replaceAll(/\<([nNrRcC])\w+\>/g, '$$$1');
+  )?.replaceAll(/\<([nNrRcC])\w+\>/g, '$$$1');
 
   // Start
-  const start = groupByKey(infobox['Start'].map(matchEntityLink));
+  const start = groupByKey(infobox['Start']?.map(matchEntityLink));
 
   // End
-  const end = groupByKey(infobox['End'].map(matchEntityLink));
+  const end = groupByKey(infobox['End']?.map(matchEntityLink));
 
   // Objectives
   const obj = groupByKey(
