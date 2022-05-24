@@ -27,6 +27,8 @@ export const Color = {
 
 const C = (...colors) => Color.Reset + colors.map(c => Color[c]).join('');
 
+export const escape = str => str.replaceAll(/"/g, '\\"');
+
 const prompt = async (message = 'Overwrite?') => {
   const { v } = await prompts({
     type: 'confirm',
@@ -163,7 +165,7 @@ export const extract = async (type, ids) => {
           return Promise.resolve();
         }
 
-        const { loc = `"${name}"`, db, rec } = callback(document, name);
+        const { loc = `"${escape(name)}"`, db, rec } = callback(document, name);
 
         await appendToLuaTable('loc', file, id, loc);
         await appendToLuaTable('db', file, id, db, name);
@@ -193,10 +195,7 @@ export const buildLuaTable = (indent, ...pairs) =>
     (str, val) =>
       !val || val[1] === undefined
         ? str
-        : `${str}${indent}  [${JSON.stringify(val[0])}] = ${val[1].replaceAll(
-            /(.)"(.)/g,
-            '$1\\"$2'
-          )},\n`,
+        : `${str}${indent}  [${JSON.stringify(val[0])}] = ${val[1]},\n`,
     ''
   )}${indent}}`;
 

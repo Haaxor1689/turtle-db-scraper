@@ -4,7 +4,8 @@ import {
   trim,
   matchEntityLink,
   getSectionRows,
-  groupByKey
+  groupByKey,
+  escape
 } from './utils.mjs';
 
 const extractQuest = (document, name) => {
@@ -84,9 +85,9 @@ const extractQuest = (document, name) => {
   return {
     loc: buildLuaTable(
       '  ',
-      name && ['T', `"${name}"`],
-      objective && ['O', `"${objective}"`],
-      description && ['D', `"${description}"`]
+      name && ['T', `"${escape(name)}"`],
+      objective && ['O', `"${escape(objective)}"`],
+      description && ['D', `"${escape(description)}"`]
     ),
     db: buildLuaTable(
       '  ',
