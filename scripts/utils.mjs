@@ -6,6 +6,8 @@ import extractNpc from './extract_npc.mjs';
 import extractObject from './extract_object.mjs';
 import extractQuest from './extract_quest.mjs';
 
+const DatabaseCache = {};
+
 export const Color = {
   Reset: '\x1b[0m',
   Bright: '\x1b[1m',
@@ -21,6 +23,16 @@ const Callbacks = {
   quest: extractQuest
 };
 
+const loadShaguDatabase = async file => {
+  if (DatabaseCache[file]) return DatabaseCache[file];
+  const page = await fetch(
+    `https://raw.githubusercontent.com/shagu/pfQuest/master/db/${file}s.lua`
+  );
+  const content = await page.text();
+  DatabaseCache[file] = content;
+  return content;
+};
+
 const loadDocument = async (table, id) => {
   console.log(
     `>>> Loading entry ${Color.Bright}[${id}]${Color.Reset} from https://database.turtle-wow.org/?${table}=${id}`
@@ -34,9 +46,11 @@ const loadDocument = async (table, id) => {
 
 const typeToFile = type => (type === 'npc' ? 'unit' : type);
 
+const checkContainsId = (file, id) => file.match(`\\n  \\[${id}\\] = `);
+
 const checkLuaTable = (path, id) => {
   const file = readFileSync(path).toString();
-  return file.match(`\\n  \\[${id}\\] = `);
+  return checkContainsId(file, id);
 };
 
 const appendToLuaTable = (path, id, entry, comment) => {
@@ -84,14 +98,23 @@ export const extract = async (type, ids) => {
         const file = typeToFile(type);
         const locFile = `./db/enUS/${file}s-turtle.lua`;
         const dbFile = `./db/${file}s-turtle.lua`;
-        if (checkLuaTable(locFile, id) || checkLuaTable(dbFile, id)) {
+
+        const shaguDb = await loadShaguDatabase(file);
+        if (checkContainsId(shaguDb, id)) {
+          console.log(
+            `${Color.Yellow}>>> Skipping [${id}], present in vanilla database.${Color.Reset}`
+          );
+          return Promise.resolve();
+        }
+
+        if (checkLuaTable(locFile, id) && checkLuaTable(dbFile, id)) {
           console.log(
             `${Color.Yellow}>>> Skipping [${id}], already present.${Color.Reset}`
           );
           return Promise.resolve();
         }
-        const document = await loadDocument(type, id);
 
+        const document = await loadDocument(type, id);
         const name = document
           .querySelector('h1')
           .textContent.split(' - ')

@@ -20,7 +20,7 @@ const extractQuest = (document, name) => {
     [...document.querySelectorAll('.main-contents .text h3')].find(
       n => n.textContent === 'Description'
     )?.nextSibling.textContent
-  ).replaceAll(/\<([nNrRcC])(ame|AME|lass|LASS|ace|ACE)\>/g, '$$$1');
+  ).replaceAll(/\<([nNrRcC])\w+\>/g, '$$$1');
 
   // Start
   const start = groupByKey(infobox['Start'].map(matchEntityLink));
@@ -54,6 +54,9 @@ const extractQuest = (document, name) => {
 
   // Level
   const lvl = infobox['Level']?.[0];
+
+  // Requires level
+  const min = infobox['Requires level']?.[0];
 
   const series = getSectionRows(document, 'Series', 'td');
   const currentQuestIndex = series.findIndex(v => !v.match(/<a href/));
@@ -93,7 +96,7 @@ const extractQuest = (document, name) => {
       !!race && ['race', race],
       !!cls && ['class', cls],
       !!lvl && ['lvl', lvl],
-      ['min', infobox['Requires level'][0]],
+      !!min && ['min', min],
       !!pre.length && ['pre', `{ ${pre.join(', ')} }`],
       !!next.length && ['next', `{ ${next.join(', ')} }`]
     ),
