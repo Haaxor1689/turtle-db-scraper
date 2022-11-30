@@ -14,6 +14,7 @@ const SeenCache = {};
 const FlagForce = process.argv.indexOf('--force') > 0;
 const FlagSafe = process.argv.indexOf('--safe') > 0;
 const FlagShallow = process.argv.indexOf('--shallow') > 0;
+const FlagVanilla = process.argv.indexOf('--vanilla') > 0;
 
 export const Color = {
   Reset: '\x1b[0m',
@@ -148,7 +149,7 @@ export const extract = async (type, ids) => {
               C(),
             entityLink(type, id)
           );
-          return Promise.resolve();
+          if (!FlagVanilla) return Promise.resolve();
         }
 
         const document = await loadDocument(type, id);

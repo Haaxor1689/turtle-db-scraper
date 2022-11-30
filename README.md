@@ -44,6 +44,7 @@ There are few flags that change the behavior of this tool:
 - `--force`: Replaces existing entries without asking
 - `--safe`: Skips existing entries without asking
 - `--shallow`: Scrapes only given entity ids without related ones
+- `--vanilla`: Also scrapes entries present in Vanilla pfQuest db instead of skipping them
 
 ## Sorting
 
